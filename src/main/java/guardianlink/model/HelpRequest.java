@@ -3,14 +3,24 @@ package guardianlink.model;
 
 //single help reuqest by a user
 // has id, name, helptype, status
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity //tells jpa to map class to a dtbs table
 public class HelpRequest {
 
+    @Id //primary key of table
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //auto increment id
     private Long id;
+
     private String name;
     private String helpType;
     private String status;
 
-    // REQUIRED: default constructor
+    // REQUIRED by jpa: default constructor
     public HelpRequest() {
     }
 
