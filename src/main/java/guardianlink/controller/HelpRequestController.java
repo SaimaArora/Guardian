@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.CrossOrigin; //for CORS
+
 //handles http request - connects http -> java and translates urls, http methods and json bodies
 
+@CrossOrigin(origins = "http://localhost:3000") //enable cross origin resource sharing(when allowed in springboot, react can call the apis, otherwise browser will block react to spring calls
 @RestController
 @RequestMapping("/requests") // every api starts with request, returns json automatically
 public class HelpRequestController {
