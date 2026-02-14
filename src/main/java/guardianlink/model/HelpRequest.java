@@ -8,6 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank; //Bean Vlaidation API(Jakarta validation)
+import jakarta.validation.constraints.Size;
 
 @Entity //tells jpa to map class to a dtbs table
 public class HelpRequest {
@@ -16,8 +18,14 @@ public class HelpRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto increment id
     private Long id;
 
+    @NotBlank(message = "Name must not be empty")
+    @Size(min = 2, message = "Name must be atleast 2 characters long")
     private String name;
+
+    @NotBlank(message = "Help type must not be empty")
+    @Size(min = 3, message = "Help type must be atleast 3 characters long")
     private String helpType;
+
     private String status;
 
     // REQUIRED by jpa: default constructor

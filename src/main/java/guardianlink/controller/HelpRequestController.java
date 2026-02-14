@@ -3,7 +3,7 @@ package guardianlink.controller;
 import guardianlink.model.HelpRequest;
 import guardianlink.service.HelpRequestService;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.CrossOrigin; //for CORS
@@ -23,7 +23,7 @@ public class HelpRequestController {
 
     // POST: create new help request (JSON)
     @PostMapping //@requestBody - json input, spring reads json and converts to helprequest and passes to service
-    public HelpRequest createRequest(@RequestBody HelpRequest request) {
+    public HelpRequest createRequest(@Valid @RequestBody HelpRequest request) {
         return helpRequestService.createRequest(request);
     }
 
@@ -43,5 +43,10 @@ public class HelpRequestController {
     @PutMapping("/{id}/complete")
     public HelpRequest completeRequest(@PathVariable Long id) {
         return helpRequestService.completeRequest(id);
+    }
+
+    @DeleteMapping("/{id}") //maps http delete requests like delete /requests/5
+    public void deleteRequest(@PathVariable Long id) {
+        helpRequestService.deleteRequest(id);
     }
 }

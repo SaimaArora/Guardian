@@ -3,6 +3,7 @@ package guardianlink.service;
 import guardianlink.model.HelpRequest;
 import guardianlink.repository.HelpRequestRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,11 @@ public class HelpRequestService {
             return helpRequestRepository.save(request);
         }
         return null;
+    }
+
+    //delete request by id
+    public void deleteRequest(Long id) {
+        helpRequestRepository.deleteById(id); //runs delete from help_request where id=?
     }
 }
 //jpa gave readymade methods like findbyid, findall, save
