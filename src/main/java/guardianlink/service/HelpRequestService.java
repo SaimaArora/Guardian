@@ -1,7 +1,9 @@
 package guardianlink.service;
-
+import guardianlink.model.Category;
+import guardianlink.repository.CategoryRepository;
 import guardianlink.model.HelpRequest;
 import guardianlink.repository.HelpRequestRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
@@ -14,16 +16,23 @@ import java.util.Optional;
 public class HelpRequestService {
 
     private final HelpRequestRepository helpRequestRepository;
+    private final CategoryRepository categoryRepository;
 
     //spring gives repo automatically through constructor injection
-    public HelpRequestService(HelpRequestRepository helpRequestRepository) {
+    public HelpRequestService(HelpRequestRepository helpRequestRepository, CategoryRepository categoryRepository) {
         this.helpRequestRepository = helpRequestRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     // Create a new help request
-    public HelpRequest createRequest(HelpRequest request) {
+    //takes catid from client, loads cate from db, not found then error, creates help request links it to category and saves
+    public HelpRequest createRequest(String name, Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                        .orElseThrow(()-> new RuntimeException("Category not found"));
+        HelpRequest request = new HelpRequest();
+        request.setName(name);
         request.setStatus("OPEN"); //set default status before saving
-
+        request.setCategory(category);
         return helpRequestRepository.save(request); //save will insert in dtbs
     }
 

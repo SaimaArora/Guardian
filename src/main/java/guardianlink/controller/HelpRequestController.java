@@ -1,5 +1,6 @@
 package guardianlink.controller;
 
+import guardianlink.dto.CreateHelpRequestDto;
 import guardianlink.model.HelpRequest;
 import guardianlink.service.HelpRequestService;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,10 @@ public class HelpRequestController {
     }
 
     // POST: create new help request (JSON)
+    //@valid tells spring to validate request body, if fails - return 400 bad request, controller method not executed, to protect db
     @PostMapping //@requestBody - json input, spring reads json and converts to helprequest and passes to service
-    public HelpRequest createRequest(@Valid @RequestBody HelpRequest request) {
-        return helpRequestService.createRequest(request);
+    public HelpRequest createRequest(@Valid @RequestBody CreateHelpRequestDto dto) {
+        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId());
     }
 
     // GET: all requests
