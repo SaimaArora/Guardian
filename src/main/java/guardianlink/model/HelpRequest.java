@@ -12,6 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.validation.constraints.NotBlank; //Bean Vlaidation API(Jakarta validation)
 import jakarta.validation.constraints.Size;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 
 @Entity //tells jpa to map class to a dtbs table
 public class HelpRequest {
@@ -19,6 +21,10 @@ public class HelpRequest {
     @Id //primary key of table
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto increment id
     private Long id;
+
+    @ManyToOne  //each helprequest belongs to one user
+    @JoinColumn(name = "user_id") //add col in hep_request table
+    private User user; // relationship = help_request.user_id = users.id
 
     @ManyToOne //many helprequests can share one category
     @JoinColumn(name = "category_id") //in helprequest table - column categoryid will be created(will store id of category)
@@ -40,6 +46,8 @@ public class HelpRequest {
         this.category = category;
     }
 
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
     public Long getId() {
         return id;
     }
