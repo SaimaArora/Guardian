@@ -3,7 +3,8 @@ import guardianlink.model.Category;
 import guardianlink.repository.CategoryRepository;
 import guardianlink.model.HelpRequest;
 import guardianlink.repository.HelpRequestRepository;
-
+import guardianlink.model.User;
+import guardianlink.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
@@ -16,23 +17,27 @@ import java.util.Optional;
 public class HelpRequestService {
 
     private final HelpRequestRepository helpRequestRepository;
-    private final CategoryRepository categoryRepository;
-
+    private final CategoryRepository categoryRepository; //helprequest must belong to a valid user and category
+    private final UserRepository userRepository;
     //spring gives repo automatically through constructor injection
-    public HelpRequestService(HelpRequestRepository helpRequestRepository, CategoryRepository categoryRepository) {
+    public HelpRequestService(HelpRequestRepository helpRequestRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
         this.helpRequestRepository = helpRequestRepository;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     // Create a new help request
     //takes catid from client, loads cate from db, not found then error, creates help request links it to category and saves
-    public HelpRequest createRequest(String name, Long categoryId) {
+    public HelpRequest createRequest(String name, Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId)
                         .orElseThrow(()-> new RuntimeException("Category not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         HelpRequest request = new HelpRequest();
         request.setName(name);
         request.setStatus("OPEN"); //set default status before saving
         request.setCategory(category);
+        request.setUser(user);
         return helpRequestRepository.save(request); //save will insert in dtbs
     }
 

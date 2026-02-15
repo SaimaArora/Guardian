@@ -26,7 +26,7 @@ public class HelpRequestController {
     //@valid tells spring to validate request body, if fails - return 400 bad request, controller method not executed, to protect db
     @PostMapping //@requestBody - json input, spring reads json and converts to helprequest and passes to service
     public HelpRequest createRequest(@Valid @RequestBody CreateHelpRequestDto dto) {
-        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId());
+        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId(), dto.getUserId());
     }
 
     // GET: all requests
