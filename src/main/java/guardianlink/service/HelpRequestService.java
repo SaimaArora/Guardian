@@ -28,10 +28,10 @@ public class HelpRequestService {
 
     // Create a new help request
     //takes catid from client, loads cate from db, not found then error, creates help request links it to category and saves
-    public HelpRequest createRequest(String name, Long categoryId, Long userId) {
+    public HelpRequest createRequest(String name, Long categoryId, String email) {
         Category category = categoryRepository.findById(categoryId)
                         .orElseThrow(()-> new RuntimeException("Category not found"));
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         HelpRequest request = new HelpRequest();
         request.setName(name);
@@ -42,8 +42,8 @@ public class HelpRequestService {
     }
 
     // Get all help requests -> findAll() - select * from help_request
-    public List<HelpRequest> getAllRequests() {
-        return helpRequestRepository.findAll();
+    public List<HelpRequest> getRequestsForUser(String email) {
+        return helpRequestRepository.findByUserEmail(email);
     }
 
     // Get request by ID
@@ -53,19 +53,24 @@ public class HelpRequestService {
     }
 
     // Mark request as completed - find request, update status, return updated object
-    public HelpRequest completeRequest(Long id) {
-        Optional<HelpRequest> optional = helpRequestRepository.findById(id);
-        if(optional.isPresent()) {
-            HelpRequest request = optional.get();
-            request.setStatus("Completed");
-            return helpRequestRepository.save(request);
+    public HelpRequest completeRequest(Long id, String email) {
+        HelpRequest request = helpRequestRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("Request not found"));
+        if(!request.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("You are allowed to complete this request");
         }
-        return null;
+        request.setStatus("COMPLETED");
+        return helpRequestRepository.save(request);
     }
 
     //delete request by id
-    public void deleteRequest(Long id) {
-        helpRequestRepository.deleteById(id); //runs delete from help_request where id=?
+    public void deleteRequest(Long id, String email) {
+        HelpRequest request = helpRequestRepository.findById(id)
+                        .orElseThrow(()-> new RuntimeException("Request not found"));
+        if(!request.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("You are not allowed to delete this request");
+        }
+        helpRequestRepository.delete(request); //runs delete from help_request where id=?
     }
 }
 //jpa gave readymade methods like findbyid, findall, save

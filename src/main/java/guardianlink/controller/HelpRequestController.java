@@ -2,6 +2,7 @@ package guardianlink.controller;
 
 import guardianlink.dto.CreateHelpRequestDto;
 import guardianlink.model.HelpRequest;
+import guardianlink.security.JwtUtil;
 import guardianlink.service.HelpRequestService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -25,14 +26,30 @@ public class HelpRequestController {
     // POST: create new help request (JSON)
     //@valid tells spring to validate request body, if fails - return 400 bad request, controller method not executed, to protect db
     @PostMapping //@requestBody - json input, spring reads json and converts to helprequest and passes to service
-    public HelpRequest createRequest(@Valid @RequestBody CreateHelpRequestDto dto) {
-        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId(), dto.getUserId());
+    public HelpRequest createRequest(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody CreateHelpRequestDto dto) {
+        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7).trim();
+         //if header missing, spring return error, token invalid - request fails
+        String email = JwtUtil.validateAndGetEmail(token); //throws if invalid
+        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId(), email);
+        //we extract token from header, validate it, email from token and pass it to service instead of userid
+    }
+
+    private String extractEmailFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid authorization header");
+        }
+        String token = authHeader.substring(7).trim();
+        return JwtUtil.validateAndGetEmail(token);
     }
 
     // GET: all requests
     @GetMapping
-    public List<HelpRequest> getAllRequests() {
-        return helpRequestService.getAllRequests();
+    public List<HelpRequest> getAllRequests(@RequestHeader("Authorization") String authHeader) {
+        String email =extractEmailFromHeader(authHeader); //forces client to send jwt, validates token and blocks unauthenticated access
+        return helpRequestService.getRequestsForUser(email);
     }
 
     // GET: request by id
@@ -43,12 +60,14 @@ public class HelpRequestController {
 
     // PUT: mark request as completed
     @PutMapping("/{id}/complete")
-    public HelpRequest completeRequest(@PathVariable Long id) {
-        return helpRequestService.completeRequest(id);
+    public HelpRequest completeRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
+        String email = extractEmailFromHeader(authHeader);
+        return helpRequestService.completeRequest(id, email);
     }
 
     @DeleteMapping("/{id}") //maps http delete requests like delete /requests/5
-    public void deleteRequest(@PathVariable Long id) {
-        helpRequestService.deleteRequest(id);
+    public void deleteRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
+        String email = extractEmailFromHeader(authHeader);
+        helpRequestService.deleteRequest(id, email); //only logged in users can delete, jwt required, check ownership
     }
 }

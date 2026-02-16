@@ -28,9 +28,9 @@ public class DataIntializer {
             }
             if (userRepository.count() == 0) {
                 List<User> defaultUsers = List.of(
-                        new User("Alice", "alice@example.com"),
-                        new User("Bob", "bob@example.com"),
-                        new User("Charlie", "charlie@example.com")
+                        new User("Alice", "alice@example.com", "pass123"),
+                        new User("Bob", "bob@example.com", "pass123"),
+                        new User("Charlie", "charlie@example.com", "pass123")
                 );
                 userRepository.saveAll(defaultUsers);
                 System.out.println("Default users inserted.");

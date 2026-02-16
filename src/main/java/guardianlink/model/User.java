@@ -20,15 +20,21 @@ public class User {
     @NotBlank(message = "Email must not be empty")
     private String email;
 
+    @NotBlank(message = "Password must not be empty")
+    @com.fasterxml.jackson.annotation.JsonIgnore //password never sent to frontend
+    private String password;
+
     @OneToMany(mappedBy = "user") //one user many helprequest
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<HelpRequest> helpRequests;
 
     public User() {
     }
 
-    public User(String name, String email) {
+    public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
+        this.password = password;
     }
     public Long getId() {
         return id;
@@ -39,6 +45,10 @@ public class User {
     public void setname(String name) {
         this.name = name;
     }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String pass) { password = pass; }
     public void setId(Long id) {
         this.id = id;
     }

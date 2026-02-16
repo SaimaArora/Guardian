@@ -16,11 +16,6 @@ public class CreateHelpRequestDto {
     @NotNull(message = "Category")
     private Long categoryId;
 
-    @NotNull(message = "User is required")
-    private Long userId;
-
-    public Long getUserId(){ return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
     public String getName() {
         return name;
     }
