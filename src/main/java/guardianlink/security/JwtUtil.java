@@ -2,7 +2,7 @@ package guardianlink.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
+import guardianlink.model.User;
 import java.util.Date;
 
 public class JwtUtil {
@@ -12,12 +12,20 @@ public class JwtUtil {
 
     private static final Algorithm algorithm = Algorithm.HMAC256(SECRET);
 
-    public static String generateToken(String email) {
+    public static String generateToken(User user) {
         return JWT.create()
-                .withSubject(email)
+                .withSubject(user.getEmail())
+                .withClaim("role", user.getRole())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(algorithm);
+    }
+    public static String getRole(String token) {
+        return JWT.require(algorithm)
+                .build()
+                .verify(token)
+                .getClaim("role")
+                .asString();
     }
 
     public static String validateAndGetEmail(String token) {
@@ -25,5 +33,12 @@ public class JwtUtil {
                 .build()
                 .verify(token)
                 .getSubject();
+    }
+    public static String getRoleFromToken(String token) {
+        return JWT.require(algorithm)
+                .build()
+                .verify(token)
+                .getClaim("role")
+                .asString();
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000") //frontend can call
@@ -34,7 +36,9 @@ public class AuthController {
         User user = new User(
                 request.getName(), request.getEmail(), passwordEncoder.encode(request.getPassword()) //password hased before saving
         );
+        user.setRole("USER"); //by default new users are normal users
         userRepository.save(user);
+
         return ResponseEntity.ok("User registered successfully");
     }
     //Login
@@ -48,7 +52,10 @@ public class AuthController {
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) { //compare raw password vs hashed password
             return ResponseEntity.status(401).body("Invalid password");
         }
-        String token = JwtUtil.generateToken(user.getEmail());
-        return ResponseEntity.ok(token);
+        String token = JwtUtil.generateToken(user);
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        response.put("role", user.getRole());
+        return ResponseEntity.ok(response);
     }
 }

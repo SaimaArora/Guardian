@@ -1,5 +1,6 @@
 package guardianlink.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import guardianlink.model.Category;
 //single help reuqest by a user
 // has id, name, helptype, status
@@ -15,6 +16,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 
+@JsonIgnoreProperties({"helpRequests"})
 @Entity //tells jpa to map class to a dtbs table
 public class HelpRequest {
 
@@ -24,6 +26,7 @@ public class HelpRequest {
 
     @ManyToOne  //each helprequest belongs to one user
     @JoinColumn(name = "user_id") //add col in hep_request table
+    @JsonIgnoreProperties({"helpRequests", "password"}) //you get name and email, not pass and help req of user
     private User user; // relationship = help_request.user_id = users.id
 
     @ManyToOne //many helprequests can share one category

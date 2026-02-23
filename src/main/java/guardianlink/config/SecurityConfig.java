@@ -1,6 +1,7 @@
 package guardianlink.config;
 
 
+import guardianlink.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,6 +24,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public JwtAuthFilter jwtAuthFilter() {
+        return new JwtAuthFilter();
+    }
+
     // ✅ Security rules + CORS + CSRF
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -31,8 +38,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()           // login/register public
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-                        .anyRequest().permitAll()                      // everything else needs auth
+//                        .requestMatchers(HttpMethod.POST, "/requests/**").hasAuthority("USER")
+//                        .requestMatchers(HttpMethod.PUT, "/requests/**").hasAuthority("VOLUNTEER")
+                        .requestMatchers("/requests/**").permitAll() //both can read
+                        .anyRequest().permitAll() //everything else is authenticated
                 );
+//                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

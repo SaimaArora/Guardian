@@ -56,8 +56,11 @@ public class HelpRequestService {
     public HelpRequest completeRequest(Long id, String email) {
         HelpRequest request = helpRequestRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Request not found"));
-        if(!request.getUser().getEmail().equals(email)) {
-            throw new RuntimeException("You are allowed to complete this request");
+//        if(!request.getUser().getEmail().equals(email)) {
+//            throw new RuntimeException("You are allowed to complete this request");
+//        }
+        if(!"OPEN".equals(request.getStatus())) {
+            throw new RuntimeException("Request already completed");
         }
         request.setStatus("COMPLETED");
         return helpRequestRepository.save(request);
@@ -71,6 +74,9 @@ public class HelpRequestService {
             throw new RuntimeException("You are not allowed to delete this request");
         }
         helpRequestRepository.delete(request); //runs delete from help_request where id=?
+    }
+    public List<HelpRequest> getAllRequests() {
+        return helpRequestRepository.findAll();
     }
 }
 //jpa gave readymade methods like findbyid, findall, save

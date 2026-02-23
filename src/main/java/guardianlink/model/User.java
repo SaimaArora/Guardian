@@ -1,5 +1,6 @@
 package guardianlink.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -7,6 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users") //user is reserved word in some dbs, so avoid conflicts
+@JsonIgnoreProperties({"helpRequests"})
 public class User {
 
     @Id
@@ -23,6 +25,9 @@ public class User {
     @NotBlank(message = "Password must not be empty")
     @com.fasterxml.jackson.annotation.JsonIgnore //password never sent to frontend
     private String password;
+
+    @Column(nullable = false)
+    private String role; //"USER" or "VOLUNTEER"
 
     @OneToMany(mappedBy = "user") //one user many helprequest
     @com.fasterxml.jackson.annotation.JsonIgnore
@@ -64,4 +69,6 @@ public class User {
     public void setHelpRequests(List<HelpRequest> helpRequest) {
         this.helpRequests = helpRequests;
     }
+    public String getRole(){ return role; }
+    public void setRole(String role) { this.role = role; }
 }

@@ -49,7 +49,8 @@ public class HelpRequestController {
     @GetMapping
     public List<HelpRequest> getAllRequests(@RequestHeader("Authorization") String authHeader) {
         String email =extractEmailFromHeader(authHeader); //forces client to send jwt, validates token and blocks unauthenticated access
-        return helpRequestService.getRequestsForUser(email);
+//        return helpRequestService.getRequestsForUser(email);
+        return helpRequestService.getAllRequests();
     }
 
     // GET: request by id
@@ -61,7 +62,13 @@ public class HelpRequestController {
     // PUT: mark request as completed
     @PutMapping("/{id}/complete")
     public HelpRequest completeRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
-        String email = extractEmailFromHeader(authHeader);
+        String token = authHeader.replace("Bearer ", "").trim();
+
+        String email = JwtUtil.validateAndGetEmail(token);
+        String role = JwtUtil.getRoleFromToken(token);
+        if (!"VOLUNTEER".equals(role)) {
+            throw new RuntimeException("Only volunteers can complete requests");
+        }
         return helpRequestService.completeRequest(id, email);
     }
 
@@ -69,5 +76,12 @@ public class HelpRequestController {
     public void deleteRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
         String email = extractEmailFromHeader(authHeader);
         helpRequestService.deleteRequest(id, email); //only logged in users can delete, jwt required, check ownership
+    }
+
+    @GetMapping("/my") //extract token, get email, fetch only that user's request
+    public List<HelpRequest> getMyRequests(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "").trim();
+        String email = JwtUtil.validateAndGetEmail(token);
+        return helpRequestService.getRequestsForUser(email);
     }
 }
