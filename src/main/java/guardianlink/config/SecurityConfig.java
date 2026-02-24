@@ -36,7 +36,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())   // enable CORS
                 .csrf(csrf -> csrf.disable())      // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()           // login/register public
+                        .requestMatchers("/auth/**").permitAll()// login/register public
+//                       .requestMatchers(HttpMethod.PUT, "/requests/*/claim").hasAuthority("VOLUNTEER")
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
 //                        .requestMatchers(HttpMethod.POST, "/requests/**").hasAuthority("USER")
 //                        .requestMatchers(HttpMethod.PUT, "/requests/**").hasAuthority("VOLUNTEER")

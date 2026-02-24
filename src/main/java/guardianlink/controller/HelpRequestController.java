@@ -84,4 +84,13 @@ public class HelpRequestController {
         String email = JwtUtil.validateAndGetEmail(token);
         return helpRequestService.getRequestsForUser(email);
     }
+
+    @PutMapping("/{id}/claim")
+    public HelpRequest claimRequest(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long id
+    ) {
+        String email = extractEmailFromHeader(authHeader);
+        return helpRequestService.claimRequest(id, email);
+    }
 }

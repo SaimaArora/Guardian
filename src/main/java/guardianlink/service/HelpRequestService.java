@@ -59,8 +59,11 @@ public class HelpRequestService {
 //        if(!request.getUser().getEmail().equals(email)) {
 //            throw new RuntimeException("You are allowed to complete this request");
 //        }
-        if(!"OPEN".equals(request.getStatus())) {
-            throw new RuntimeException("Request already completed");
+        if(!"IN_PROGRESS".equals(request.getStatus())) {
+            throw new RuntimeException("Request is not in progress");
+        }
+        if(request.getAssignedVolunteer() == null || !request.getAssignedVolunteer().getEmail().equals(email)) {
+            throw new RuntimeException("You are not assigned to this request");
         }
         request.setStatus("COMPLETED");
         return helpRequestRepository.save(request);
@@ -77,6 +80,23 @@ public class HelpRequestService {
     }
     public List<HelpRequest> getAllRequests() {
         return helpRequestRepository.findAll();
+    }
+
+    //for controller claim request
+    public HelpRequest claimRequest(Long requestId, String volunteerEmail) {
+        HelpRequest request = helpRequestRepository.findById(requestId)
+                .orElseThrow(()-> new RuntimeException("Request not Found"));
+        if(!request.getStatus().equals("OPEN")) {
+            throw new RuntimeException("Request is not open");
+        }
+        User volunteer = userRepository.findByEmail(volunteerEmail)
+                .orElseThrow(()-> new RuntimeException("User not found"));
+        if(!"VOLUNTEER".equals(volunteer.getRole())) {
+            throw new RuntimeException("Only volunteers can claim request");
+        }
+        request.setStatus("IN_PROGRESS");
+        request.setAssignedVolunteer(volunteer);
+        return helpRequestRepository.save(request);
     }
 }
 //jpa gave readymade methods like findbyid, findall, save

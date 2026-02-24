@@ -29,6 +29,10 @@ public class HelpRequest {
     @JsonIgnoreProperties({"helpRequests", "password"}) //you get name and email, not pass and help req of user
     private User user; // relationship = help_request.user_id = users.id
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_volunteer_id")
+    private User assignedVolunteer;
+
     @ManyToOne //many helprequests can share one category
     @JoinColumn(name = "category_id") //in helprequest table - column categoryid will be created(will store id of category)
     private Category category;
@@ -38,6 +42,8 @@ public class HelpRequest {
     private String name;
 
     private String status;
+
+
 
     // REQUIRED by jpa: default constructor
     public HelpRequest() {
@@ -77,4 +83,7 @@ public class HelpRequest {
 
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
+
+    public User getAssignedVolunteer() { return assignedVolunteer; }
+    public void setAssignedVolunteer(User assignedVolunteer) { this.assignedVolunteer = assignedVolunteer; }
 }
