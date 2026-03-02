@@ -34,7 +34,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; //"USER" or "VOLUNTEER"
+    private Role role; //"USER" or "VOLUNTEER"
 
     @OneToMany(mappedBy = "user") //one user many helprequest
     @JsonIgnore

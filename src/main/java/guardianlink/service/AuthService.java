@@ -31,11 +31,12 @@ public class AuthService {
         if(userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("Email already registered");
         }
+        Role role = request.getRole() != null ? request.getRole() : Role.USER;
         User user = new User(
                 request.getName(),
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
-                Role.USER
+                role
         );
         userRepository.save(user);
     }

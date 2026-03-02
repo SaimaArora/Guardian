@@ -25,6 +25,7 @@ public class Category {
     public String getName() {
         return name;
     }
+//    public void setId(long num) this.id = num;
     public void setName(String name) {
         this.name = name;
     }

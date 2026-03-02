@@ -22,7 +22,7 @@ public class AuthController {
     @PostMapping("/register") // -> /auth/register - checks if email exists, and creates user
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully", null));
     }
     //Login
     @PostMapping("/login") // -> /auth/login - finds email by user, checks password

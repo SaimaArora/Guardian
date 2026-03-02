@@ -19,15 +19,17 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+    private final JwtAuthFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() { //used to hash passwords on register and verify passwords on login
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public JwtAuthFilter jwtAuthFilter() {
-        return new JwtAuthFilter();
-    }
 
     // ✅ Security rules + CORS + CSRF
     @Bean
@@ -44,9 +46,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/requests/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PUT, "/requests/**").hasRole("VOLUNTEER")
                         .requestMatchers(HttpMethod.GET, "/requests/**").authenticated()
-                        .anyRequest.authenticated();
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
