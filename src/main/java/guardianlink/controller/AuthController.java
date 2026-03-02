@@ -2,60 +2,31 @@ package guardianlink.controller;
 
 import guardianlink.dto.LoginRequest;
 import guardianlink.dto.RegisterRequest;
-import guardianlink.model.User;
-import guardianlink.repository.UserRepository;
-import guardianlink.security.JwtUtil;
+import guardianlink.service.AuthService;
 
+import guardianlink.util.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000") //frontend can call
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+
+    private final AuthService authService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
     //register
     @PostMapping("/register") // -> /auth/register - checks if email exists, and creates user
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        //check if email exists
-        Optional<User> existing = userRepository.findByEmail(request.getEmail());
-        if (existing.isPresent()) {
-            return ResponseEntity.badRequest().body("Email already registered");
-        }
-        User user = new User(
-                request.getName(), request.getEmail(), passwordEncoder.encode(request.getPassword()) //password hased before saving
-        );
-        user.setRole("USER"); //by default new users are normal users
-        userRepository.save(user);
-
-        return ResponseEntity.ok("User registered successfully");
+        authService.register(request);
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
     }
     //Login
     @PostMapping("/login") // -> /auth/login - finds email by user, checks password
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(401).body("Invalid email");
-        }
-        User user = userOpt.get();
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) { //compare raw password vs hashed password
-            return ResponseEntity.status(401).body("Invalid password");
-        }
-        String token = JwtUtil.generateToken(user);
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        response.put("role", user.getRole());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success("Login Successful", authService.login(request)));
     }
 }

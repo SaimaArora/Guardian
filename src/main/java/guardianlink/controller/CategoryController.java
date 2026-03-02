@@ -8,7 +8,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000") //allows reactjs to call this api
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("/categories") //means all mappings start with /categories
 public class CategoryController {
     private final CategoryRepository categoryRepository;
 

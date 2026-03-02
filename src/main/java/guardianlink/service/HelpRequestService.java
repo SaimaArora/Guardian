@@ -1,5 +1,9 @@
 package guardianlink.service;
+import guardianlink.dto.HelpRequestResponse;
+import guardianlink.exception.BadRequestException;
+import guardianlink.exception.UnauthorizedException;
 import guardianlink.model.Category;
+import guardianlink.model.RequestStatus;
 import guardianlink.repository.CategoryRepository;
 import guardianlink.model.HelpRequest;
 import guardianlink.repository.HelpRequestRepository;
@@ -28,75 +32,114 @@ public class HelpRequestService {
 
     // Create a new help request
     //takes catid from client, loads cate from db, not found then error, creates help request links it to category and saves
-    public HelpRequest createRequest(String name, Long categoryId, String email) {
+    public HelpRequestResponse createRequest(String name, Long categoryId, String email) {
         Category category = categoryRepository.findById(categoryId)
                         .orElseThrow(()-> new RuntimeException("Category not found"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         HelpRequest request = new HelpRequest();
         request.setName(name);
-        request.setStatus("OPEN"); //set default status before saving
+        request.setStatus(RequestStatus.OPEN);//set default status before saving
         request.setCategory(category);
         request.setUser(user);
-        return helpRequestRepository.save(request); //save will insert in dtbs
+        HelpRequest saved = helpRequestRepository.save(request); //save will insert in dtbs
+        return mapToResponse(saved);
     }
 
     // Get all help requests -> findAll() - select * from help_request
-    public List<HelpRequest> getRequestsForUser(String email) {
-        return helpRequestRepository.findByUserEmail(email);
+    public List<HelpRequestResponse> getAllRequests() {
+        return helpRequestRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+    // Get requests for logged-in user
+    public List<HelpRequestResponse> getRequestsForUser(String email) {
+        return helpRequestRepository.findByUserEmail(email)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     // Get request by ID
-    public HelpRequest getRequestById(Long id) {
-        Optional<HelpRequest> optional = helpRequestRepository.findById(id);
-        return optional.orElse(null);
+    public HelpRequestResponse getRequestById(Long id) {
+        HelpRequest request = helpRequestRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Request not found"));
+
+        return mapToResponse(request);
     }
 
     // Mark request as completed - find request, update status, return updated object
-    public HelpRequest completeRequest(Long id, String email) {
+    public HelpRequestResponse completeRequest(Long id, String email) {
+
         HelpRequest request = helpRequestRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Request not found"));
-//        if(!request.getUser().getEmail().equals(email)) {
-//            throw new RuntimeException("You are allowed to complete this request");
-//        }
-        if(!"IN_PROGRESS".equals(request.getStatus())) {
-            throw new RuntimeException("Request is not in progress");
+                .orElseThrow(() -> new BadRequestException("Request not found"));
+
+        if (request.getStatus() != RequestStatus.IN_PROGRESS) {
+            throw new BadRequestException("Request is not in progress");
         }
-        if(request.getAssignedVolunteer() == null || !request.getAssignedVolunteer().getEmail().equals(email)) {
-            throw new RuntimeException("You are not assigned to this request");
+
+        if (request.getAssignedVolunteer() == null ||
+                !request.getAssignedVolunteer().getEmail().equals(email)) {
+            throw new UnauthorizedException("You are not assigned to this request");
         }
-        request.setStatus("COMPLETED");
-        return helpRequestRepository.save(request);
+
+        request.setStatus(RequestStatus.COMPLETED);
+
+        HelpRequest updated = helpRequestRepository.save(request);
+
+        return mapToResponse(updated);
     }
 
     //delete request by id
     public void deleteRequest(Long id, String email) {
+
         HelpRequest request = helpRequestRepository.findById(id)
-                        .orElseThrow(()-> new RuntimeException("Request not found"));
-        if(!request.getUser().getEmail().equals(email)) {
-            throw new RuntimeException("You are not allowed to delete this request");
+                .orElseThrow(() -> new BadRequestException("Request not found"));
+
+        if (!request.getUser().getEmail().equals(email)) {
+            throw new UnauthorizedException("You are not allowed to delete this request");
         }
-        helpRequestRepository.delete(request); //runs delete from help_request where id=?
-    }
-    public List<HelpRequest> getAllRequests() {
-        return helpRequestRepository.findAll();
+
+        helpRequestRepository.delete(request);
     }
 
     //for controller claim request
-    public HelpRequest claimRequest(Long requestId, String volunteerEmail) {
+    public HelpRequestResponse claimRequest(Long requestId, String volunteerEmail) {
+
         HelpRequest request = helpRequestRepository.findById(requestId)
-                .orElseThrow(()-> new RuntimeException("Request not Found"));
-        if(!request.getStatus().equals("OPEN")) {
-            throw new RuntimeException("Request is not open");
+                .orElseThrow(() -> new BadRequestException("Request not found"));
+
+        if (request.getStatus() != RequestStatus.OPEN) {
+            throw new BadRequestException("Request is not open");
         }
+
         User volunteer = userRepository.findByEmail(volunteerEmail)
-                .orElseThrow(()-> new RuntimeException("User not found"));
-        if(!"VOLUNTEER".equals(volunteer.getRole())) {
-            throw new RuntimeException("Only volunteers can claim request");
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        if (!"VOLUNTEER".equals(volunteer.getRole().name())) {
+            throw new UnauthorizedException("Only volunteers can claim requests");
         }
-        request.setStatus("IN_PROGRESS");
+
+        request.setStatus(RequestStatus.IN_PROGRESS);
         request.setAssignedVolunteer(volunteer);
-        return helpRequestRepository.save(request);
+
+        HelpRequest updated = helpRequestRepository.save(request);
+
+        return mapToResponse(updated);
+    }
+
+    private HelpRequestResponse mapToResponse(HelpRequest request) {
+        return new HelpRequestResponse(
+                request.getId(),
+                request.getName(),
+                request.getStatus().name(),
+                request.getCategory().getName(),
+                request.getUser().getEmail(),
+                request.getAssignedVolunteer() != null
+                        ? request.getAssignedVolunteer().getEmail()
+                        : null
+        );
     }
 }
 //jpa gave readymade methods like findbyid, findall, save

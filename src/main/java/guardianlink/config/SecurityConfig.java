@@ -36,15 +36,17 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())   // enable CORS
                 .csrf(csrf -> csrf.disable())      // disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()// login/register public
-//                       .requestMatchers(HttpMethod.PUT, "/requests/*/claim").hasAuthority("VOLUNTEER")
+                        //public endpoints
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/requests/**").hasAuthority("USER")
-//                        .requestMatchers(HttpMethod.PUT, "/requests/**").hasAuthority("VOLUNTEER")
-                        .requestMatchers("/requests/**").permitAll() //both can read
-                        .anyRequest().permitAll() //everything else is authenticated
-                );
-//                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+
+                        //authenticated endpoints
+                        .requestMatchers(HttpMethod.POST, "/requests/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PUT, "/requests/**").hasRole("VOLUNTEER")
+                        .requestMatchers(HttpMethod.GET, "/requests/**").authenticated()
+                        .anyRequest.authenticated();
+                )
+                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

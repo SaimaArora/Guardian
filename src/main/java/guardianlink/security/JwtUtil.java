@@ -3,42 +3,36 @@ package guardianlink.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import guardianlink.model.User;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.util.Date;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET = "guardianlink_super_secret_key";
-    private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 24h
+    private final Algorithm algorithm;
+    private final long expirationTime;
 
-    private static final Algorithm algorithm = Algorithm.HMAC256(SECRET);
-
-    public static String generateToken(User user) {
+    public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expirationTime) {
+        this.algorithm = Algorithm.HMAC256(secret);
+        this.expirationTime = expirationTime;
+    }
+    public String generateToken(User user) {
         return JWT.create()
                 .withSubject(user.getEmail())
-                .withClaim("role", user.getRole())
+                .withClaim("role", user.getRole().name())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationTime))
                 .sign(algorithm);
     }
-    public static String getRole(String token) {
+    public String extractEmail(String token) {
         return JWT.require(algorithm)
-                .build()
-                .verify(token)
-                .getClaim("role")
-                .asString();
+                .build().verify(token).getSubject();
     }
-
-    public static String validateAndGetEmail(String token) {
+    public String extractRole(String token) {
         return JWT.require(algorithm)
-                .build()
-                .verify(token)
-                .getSubject();
-    }
-    public static String getRoleFromToken(String token) {
-        return JWT.require(algorithm)
-                .build()
-                .verify(token)
-                .getClaim("role")
-                .asString();
+                .build().verify(token).getClaim("role").asString();
     }
 }

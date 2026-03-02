@@ -5,12 +5,7 @@ import guardianlink.model.Category;
 //single help reuqest by a user
 // has id, name, helptype, status
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank; //Bean Vlaidation API(Jakarta validation)
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.ManyToOne;
@@ -41,14 +36,16 @@ public class HelpRequest {
     @Size(min = 2, message = "Name must be atleast 2 characters long")
     private String name;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RequestStatus status;
 
 
 
     // REQUIRED by jpa: default constructor
     public HelpRequest() {
     }
-    public HelpRequest(Long id, String name, String status, Category category) {
+    public HelpRequest(Long id, String name, RequestStatus status, Category category) {
         this.id = id;
         this.name = name;
         this.status = status;
@@ -73,11 +70,11 @@ public class HelpRequest {
         this.name = name;
     }
 
-    public String getStatus() {
+    public RequestStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(RequestStatus status) {
         this.status = status;
     }
 

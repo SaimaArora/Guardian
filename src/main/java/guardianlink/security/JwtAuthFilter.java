@@ -4,6 +4,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -18,7 +19,14 @@ import java.util.List;
  * sets usernamepasswordauth  with role as granted authority
  * just leaves the request unaithenticated so spring will reject endpoints requiring auth**/
 
+@Component
 public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+
+    public JwtAuthFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,11 +39,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7).trim(); // IMPORTANT: strip "Bearer "
                 // Validate token and extract claims
-                String email = JwtUtil.validateAndGetEmail(token); // throws if invalid
-                String role = JwtUtil.getRole(token); // now static (see change below)
+                String email = jwtUtil.extractEmail(token); // throws if invalid
+                String role = jwtUtil.extractRole(token); // now static (see change below)
 
                 // Map role claim to a SimpleGrantedAuthority
-                var authority = new SimpleGrantedAuthority(role);
+                var authority = new SimpleGrantedAuthority("ROLE_"+role);
                 var auth = new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

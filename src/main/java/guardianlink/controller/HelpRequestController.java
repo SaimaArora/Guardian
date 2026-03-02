@@ -1,9 +1,12 @@
 package guardianlink.controller;
 
 import guardianlink.dto.CreateHelpRequestDto;
+import guardianlink.dto.HelpRequestResponse;
 import guardianlink.model.HelpRequest;
 import guardianlink.security.JwtUtil;
 import guardianlink.service.HelpRequestService;
+import guardianlink.util.ApiResponse;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -25,72 +28,94 @@ public class HelpRequestController {
 
     // POST: create new help request (JSON)
     //@valid tells spring to validate request body, if fails - return 400 bad request, controller method not executed, to protect db
-    @PostMapping //@requestBody - json input, spring reads json and converts to helprequest and passes to service
-    public HelpRequest createRequest(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody CreateHelpRequestDto dto) {
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-        String token = authHeader.substring(7).trim();
-         //if header missing, spring return error, token invalid - request fails
-        String email = JwtUtil.validateAndGetEmail(token); //throws if invalid
-        return helpRequestService.createRequest(dto.getName(), dto.getCategoryId(), email);
-        //we extract token from header, validate it, email from token and pass it to service instead of userid
-    }
+    @PostMapping
+    public ApiResponse<HelpRequestResponse> createRequest(
+            Authentication authentication,
+            @Valid @RequestBody CreateHelpRequestDto dto
+    ) {
+        String email = authentication.getName();
 
-    private String extractEmailFromHeader(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid authorization header");
-        }
-        String token = authHeader.substring(7).trim();
-        return JwtUtil.validateAndGetEmail(token);
+        HelpRequestResponse response =
+                helpRequestService.createRequest(
+                        dto.getName(),
+                        dto.getCategoryId(),
+                        email
+                );
+
+        return ApiResponse.success("Request created successfully", response);
     }
 
     // GET: all requests
-    @GetMapping
-    public List<HelpRequest> getAllRequests(@RequestHeader("Authorization") String authHeader) {
-        String email =extractEmailFromHeader(authHeader); //forces client to send jwt, validates token and blocks unauthenticated access
-//        return helpRequestService.getRequestsForUser(email);
-        return helpRequestService.getAllRequests();
-    }
+     @GetMapping
+        public ApiResponse<List<HelpRequestResponse>> getAllRequests(
+                Authentication authentication
+        ) {
+            List<HelpRequestResponse> responses =
+                    helpRequestService.getAllRequests();
+
+            return ApiResponse.success("Requests fetched successfully", responses);
+        }
 
     // GET: request by id
     @GetMapping("/{id}")
-    public HelpRequest getRequestById(@PathVariable Long id) {
-        return helpRequestService.getRequestById(id);
+    public ApiResponse<HelpRequestResponse> getRequestById(
+            @PathVariable Long id
+    ) {
+        HelpRequestResponse response =
+                helpRequestService.getRequestById(id);
+
+        return ApiResponse.success("Request fetched successfully", response);
     }
 
     // PUT: mark request as completed
     @PutMapping("/{id}/complete")
-    public HelpRequest completeRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
-        String token = authHeader.replace("Bearer ", "").trim();
-
-        String email = JwtUtil.validateAndGetEmail(token);
-        String role = JwtUtil.getRoleFromToken(token);
-        if (!"VOLUNTEER".equals(role)) {
-            throw new RuntimeException("Only volunteers can complete requests");
-        }
-        return helpRequestService.completeRequest(id, email);
-    }
-
-    @DeleteMapping("/{id}") //maps http delete requests like delete /requests/5
-    public void deleteRequest(@RequestHeader("Authorization") String authHeader, @PathVariable Long id) {
-        String email = extractEmailFromHeader(authHeader);
-        helpRequestService.deleteRequest(id, email); //only logged in users can delete, jwt required, check ownership
-    }
-
-    @GetMapping("/my") //extract token, get email, fetch only that user's request
-    public List<HelpRequest> getMyRequests(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "").trim();
-        String email = JwtUtil.validateAndGetEmail(token);
-        return helpRequestService.getRequestsForUser(email);
-    }
-
-    @PutMapping("/{id}/claim")
-    public HelpRequest claimRequest(
-            @RequestHeader("Authorization") String authHeader,
+    public ApiResponse<HelpRequestResponse> completeRequest(
+            Authentication authentication,
             @PathVariable Long id
     ) {
-        String email = extractEmailFromHeader(authHeader);
-        return helpRequestService.claimRequest(id, email);
+        String email = authentication.getName();
+
+        HelpRequestResponse response =
+                helpRequestService.completeRequest(id, email);
+
+        return ApiResponse.success("Request completed successfully", response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteRequest(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        String email = authentication.getName();
+
+        helpRequestService.deleteRequest(id, email);
+
+        return ApiResponse.success("Request deleted successfully", null);
+    }
+
+    @GetMapping("/my")
+    public ApiResponse<List<HelpRequestResponse>> getMyRequests(
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+
+        List<HelpRequestResponse> responses =
+                helpRequestService.getRequestsForUser(email);
+
+        return ApiResponse.success("Your requests fetched successfully", responses);
+    }
+
+
+    @PutMapping("/{id}/claim")
+    public ApiResponse<HelpRequestResponse> claimRequest(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        String email = authentication.getName();
+
+        HelpRequestResponse response =
+                helpRequestService.claimRequest(id, email);
+
+        return ApiResponse.success("Request claimed successfully", response);
     }
 }
