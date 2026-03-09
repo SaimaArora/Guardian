@@ -105,6 +105,13 @@ public class HelpRequestController {
         return ApiResponse.success("Your requests fetched successfully", responses);
     }
 
+    @GetMapping("/assigned") //returns only requests assigned to the volunteer
+    public ApiResponse<List<HelpRequestResponse>> getAssignedRequests(Authentication authentication) {
+        String email = authentication.getName();
+        List<HelpRequestResponse> responses = helpRequestService.getAssignedRequests(email);
+        return ApiResponse.success("Assigned requests fetched successfully", responses);
+    }
+
 
     @PutMapping("/{id}/claim")
     public ApiResponse<HelpRequestResponse> claimRequest(

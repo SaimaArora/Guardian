@@ -31,6 +31,7 @@ public class AuthService {
         if(userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("Email already registered");
         }
+        System.out.println("Register role: " + request.getRole());
         Role role = request.getRole() != null ? request.getRole() : Role.USER;
         User user = new User(
                 request.getName(),

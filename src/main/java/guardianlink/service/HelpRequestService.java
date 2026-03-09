@@ -120,6 +120,15 @@ public class HelpRequestService {
         if (!"VOLUNTEER".equals(volunteer.getRole().name())) {
             throw new UnauthorizedException("Only volunteers can claim requests");
         }
+        List<HelpRequest> assigned =
+                helpRequestRepository.findByAssignedVolunteerEmail(volunteerEmail);
+
+        boolean hasActiveRequest = assigned.stream()
+                .anyMatch(r -> r.getStatus().equals("IN_PROGRESS"));
+
+        if(hasActiveRequest){
+            throw new RuntimeException("Complete your current request before claiming another");
+        }
 
         request.setStatus(RequestStatus.IN_PROGRESS);
         request.setAssignedVolunteer(volunteer);
@@ -140,6 +149,20 @@ public class HelpRequestService {
                         ? request.getAssignedVolunteer().getEmail()
                         : null
         );
+    }
+    public List<HelpRequestResponse> getRequestsForVolunteer(String email) {
+        return helpRequestRepository
+                .findByAssignedVolunteerEmail(email)
+                .stream()
+                .map(this::mapToResponse)
+                .toList(); //returns request where assignedemail == volunteer email
+    }
+
+    public List<HelpRequestResponse> getAssignedRequests(String email) {
+        return helpRequestRepository.findByAssignedVolunteerEmail(email)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }
 //jpa gave readymade methods like findbyid, findall, save
