@@ -15,10 +15,12 @@ public class JwtUtil {
     private final Algorithm algorithm;
     private final long expirationTime;
 
-    public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expirationTime) {
-        this.algorithm = Algorithm.HMAC256(secret);
-        this.expirationTime = expirationTime;
+    public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expirationTime) { // 24 hrs
+        this.algorithm = Algorithm.HMAC256(secret); //how token is signed(signature algo) - has based mess
+        this.expirationTime = expirationTime; //how long it is valid
     }
+
+    //runs during login
     public String generateToken(User user) {
         return JWT.create()
                 .withSubject(user.getEmail())

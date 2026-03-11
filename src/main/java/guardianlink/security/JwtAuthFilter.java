@@ -28,23 +28,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    @Override //executes once per request
+    protected void doFilterInternal(HttpServletRequest request, //represents incoming request
+                                    HttpServletResponse response, //response sent to client
+                                    FilterChain filterChain) //next filter in chain
             throws ServletException, IOException {
 
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String authHeader = request.getHeader("Authorization"); //readds the header
+            if (authHeader != null && authHeader.startsWith("Bearer ")) { //if token exists
                 String token = authHeader.substring(7).trim(); // IMPORTANT: strip "Bearer "
-                // Validate token and extract claims
+                // Validate token and extract claims - data from jwt
                 String email = jwtUtil.extractEmail(token); // throws if invalid
                 String role = jwtUtil.extractRole(token); // now static (see change below)
 
                 // Map role claim to a SimpleGrantedAuthority
-                var authority = new SimpleGrantedAuthority("ROLE_"+role);
-                var auth = new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
+                var authority = new SimpleGrantedAuthority("ROLE_"+role); //spring uses authorities to represent roles
+                var auth = new UsernamePasswordAuthenticationToken(email, null, List.of(authority)); //authenticated user
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (JWTVerificationException | IllegalArgumentException ex) {
@@ -53,6 +53,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             logger.debug("JWT validation failed: " + ex.getMessage());
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response); //go ahead requests to controller
     }
 }
